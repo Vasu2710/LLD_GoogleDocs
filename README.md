@@ -7,6 +7,10 @@ Each user has a cursor position
 Other users can see cursor updates
 Document updates should notify all active collaborators
 
+User -> joins document session
+Session -> maintains active users
+Each user -> has cursor
+
 For an LLD interview, we usually implement:
 
 Observer Pattern → notify users of changes
