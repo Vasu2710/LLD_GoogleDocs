@@ -11,22 +11,27 @@ import javax.print.Doc;
 
 @SpringBootApplication
 public class GoogleDocsApplication {
+		public static void main(String[] args) {
 
-	public static void main(String[] args) {
+			User owner = new User(1, "Alice");
+			User editor = new User(2, "Bob");
+			User viewer = new User(3, "Charlie");
 
-		User userA = new User(1, "userA");
-		User userB = new User(2, "userB");
+			Document doc = new Document(1, "Design Doc", owner);
 
-		DocumentService documentService = new DocumentService();
-		Document document = documentService.createDocument(1, "Doc1", userA);
+			doc.shareDocument(owner, editor, Permission.EDIT);
+			doc.shareDocument(owner, viewer, Permission.VIEW);
 
-		document.addContent(userA, new TextContent(1, "Hello World!!"));
-		document.addContent(userA, new ImageContent(2, "image.png"));
-		document.addContent(userA, new LinkContent(3, "https://google.com"));
+			doc.joinSession(owner);
+			doc.joinSession(editor);
+			doc.joinSession(viewer);
 
-		document.shareDocument(userB, Permission.VIEW);
+			doc.applyEdit(owner,
+					new EditOperation(EditOperation.Type.INSERT, "Hello ", 0));
 
-		document.viewDocument(userB);
-	}
+			doc.moveCursor(editor, 6);
 
+			doc.applyEdit(editor,
+					new EditOperation(EditOperation.Type.INSERT, "World", 6));
+		}
 }

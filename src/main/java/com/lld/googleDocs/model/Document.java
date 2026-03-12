@@ -9,40 +9,85 @@ import java.util.Map;
 
 public class Document {
 
-    private int id;
+    private Integer id;
     private String title;
-    private User owner;
-    private List<Content> contents = new ArrayList<>();
-    private Map<User, Permission> permissionMap = new HashMap<>();
 
-    public Document(int id, String title, User owner) {
+    private User owner;
+
+    private StringBuilder content = new StringBuilder();
+
+    private Map<Integer, Permission> permissions = new HashMap<>();
+
+    private Map<Integer, UserSession> activeSessions = new HashMap<>();
+
+    public Document(Integer id, String title, User owner) {
         this.id = id;
         this.title = title;
         this.owner = owner;
-        permissionMap.put(owner, Permission.EDIT);
+
+        permissions.put(owner.getId(), Permission.EDIT);
     }
 
-    public void addContent(User user, Content content){
-
-        if(permissionMap.get(user) != Permission.EDIT){
-            throw new RuntimeException("No edit permission!");
-        }
-        contents.add(content);
+    public User getOwner() {
+        return owner;
     }
 
+    public void shareDocument(User ownerUser, User targetUser, Permission permission) {
 
-    public void viewDocument(User user) {
-
-        if(!permissionMap.containsKey(user)) {
-            throw new RuntimeException("No access");
+        if(!ownerUser.getId().equals(owner.getId())) {
+            throw new RuntimeException("Only owner can share document");
         }
 
-        for(Content c : contents) {
-            c.render();
+        permissions.put(targetUser.getId(), permission);
+    }
+
+    public void joinSession(User user) {
+
+        if(!permissions.containsKey(user.getId())) {
+            throw new RuntimeException("User has no access");
+        }
+
+        activeSessions.put(user.getId(), new UserSession(user));
+    }
+
+    public void moveCursor(User user, int position) {
+
+        UserSession session = activeSessions.get(user.getId());
+        session.getCursor().move(position);
+
+        broadcast(user.getId() + " moved cursor to " + position);
+    }
+
+    public void applyEdit(User user, EditOperation operation) {
+
+        Permission permission = permissions.get(user.getId());
+
+        if(permission != Permission.EDIT) {
+            throw new RuntimeException("No edit permission");
+        }
+
+        if(operation.getType() == EditOperation.Type.INSERT) {
+
+            content.insert(operation.getPosition(), operation.getText());
+        }
+        else {
+
+            int start = operation.getPosition();
+            int end = start + operation.getText().length();
+            content.delete(start, end);
+        }
+
+        broadcast("Document updated: " + content.toString());
+    }
+
+    private void broadcast(String message) {
+
+        for(UserSession session : activeSessions.values()) {
+            session.notifyUpdate(message);
         }
     }
 
-    public void shareDocument(User user, Permission permission) {
-        permissionMap.put(user, permission);
+    public String getContent() {
+        return content.toString();
     }
 }

@@ -2,7 +2,7 @@ package com.lld.googleDocs.model;
 
 public class User {
 
-    private int id;
+    private Integer id;
     private String name;
 
 
@@ -10,5 +10,21 @@ public class User {
         this.id = id;
         this.name = name;
 
+    }
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 }
